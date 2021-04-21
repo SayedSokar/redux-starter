@@ -1,9 +1,12 @@
-const BUG_ADDED = "bugAdded"
-const BUG_REMOVED = "bugRemoved"
-const BUG_RESOLVED = "bugResolved"
+
+import { createAction } from '@reduxjs/toolkit'
+
+// --------------------------actions Creator functions --------------//
 
 
-
+export const bugAdded= createAction ("bugAdded")
+export const bugRemoved = createAction("bugRemoved")
+export const bugResolved = createAction("bugResolved")
 
 
 
@@ -14,7 +17,7 @@ let lastId = 0
 
 export default function reducer(state = [], action) {
     switch (action.type) {
-        case BUG_ADDED:
+        case bugAdded.type:
              return [
             ...state,
             {
@@ -23,10 +26,10 @@ export default function reducer(state = [], action) {
                 resolved: false
             }
             ]
-        case BUG_REMOVED:
+        case bugRemoved.type:
             return state.filter(bug => bug.id !== action.payload.id)
         
-        case BUG_RESOLVED:
+        case bugResolved.type:
             return state.map(bug => bug.id == action.payload.id ? {...bug, resolved: true} : bug)
             
         default:
@@ -36,27 +39,3 @@ export default function reducer(state = [], action) {
     
 
 
-// --------------------------actions Creator functions --------------//
-
-
-export const bugAdded= description => ({
-    type: BUG_ADDED,
-    payload: {
-        description: description
-    }
-})
-
-export const  bugRemoved = id => ({
-        type: BUG_REMOVED,
-            payload: {
-            id: id
-        }
-})
-
-export const bugResolved = id => ({
-    type: BUG_RESOLVED,
-    payload: {
-        id // this code orginaly should be like that id: id,  but this is short if the name of the properity and the variable is same.
-        
-    }
-})

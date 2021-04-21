@@ -9,13 +9,13 @@ const unsubscribe = store.subscribe(() => {
 
     }
 )
-store.dispatch(bugAdded("Bug1"))
-store.dispatch(bugAdded("Bug2"))
-store.dispatch(bugAdded("Bug3"))
-store.dispatch(bugResolved(1))
+store.dispatch(bugAdded({description: "Bug1"}))
+store.dispatch(bugAdded({description: "Bug2"}))
+store.dispatch(bugAdded({description: "Bug3"}))
+store.dispatch(bugResolved({id:1}))
 
 unsubscribe() // when you change the UI page, u should unsubscribe to save memory space.
 
-store.dispatch(bugRemoved(2))
+store.dispatch(bugRemoved({id:2}))
 
 console.log(store.getState())
