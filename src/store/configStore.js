@@ -9,6 +9,6 @@ import logger from './middleware/logger'
 export default function () {
     return configureStore({
         reducer, // it can be writen like (reducer: reducer), both are the same name, so we can just put reducer
-        middleware: [logger] // this properity is calling the Middleware logger.
+        middleware: [logger({destination: "console"})] // this properity is calling the Middleware logger.
     })
  }

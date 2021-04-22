@@ -1,8 +1,7 @@
 
-const logger = store => next => action => {
-    console.log("store", store)
-    console.log("Next", next)
-    console.log("action", action)
+const logger = param => store => next => action => { // if needed to send param to the middleware, this is how (note: param)
+    console.log("Logging", param)
+    
     next(action)
 }
 export default logger
