@@ -1,10 +1,10 @@
 
-import { createAction } from '@reduxjs/toolkit'
+import { createAction, createReducer } from '@reduxjs/toolkit'
 
 // --------------------------actions Creator functions --------------//
 
 
-export const bugAdded= createAction ("bugAdded")
+export const bugAdded = createAction ("bugAdded")
 export const bugRemoved = createAction("bugRemoved")
 export const bugResolved = createAction("bugResolved")
 
@@ -12,30 +12,32 @@ export const bugResolved = createAction("bugResolved")
 
 // ---------------------------------------reducer function --------------//
 //------ note that the reducer should be the default export here in ths file---//
+//----- Note: createReducer function from redux-toolkit is using immer under the hood, so u can wirte imutated code as normal.
+//-- no need to the default state like below
 
-let lastId = 0
+export default createReducer([], {
 
-export default function reducer(state = [], action) {
-    switch (action.type) {
-        case bugAdded.type:
-             return [
-            ...state,
-            {
+    [bugAdded.type]: (bugs, action) => {
+        bugs.push({
                 id: ++lastId,
                 description: action.payload.description,
                 resolved: false
-            }
-            ]
-        case bugRemoved.type:
-            return state.filter(bug => bug.id !== action.payload.id)
-        
-        case bugResolved.type:
-            return state.map(bug => bug.id == action.payload.id ? {...bug, resolved: true} : bug)
-            
-        default:
-            return state
+            })
+    },
+    [bugRemoved.type]: (bugs, action) => {
+         bugs.filter(bug => bug.id !== action.payload.id)
+    },
+    [bugResolved.type]: (bugs, action) => {
+        // state.map(bug => bug.id == action.payload.id ? { ...bug, resolved: true } : bug)
+        const index = bugs.findIndex(bug => action.payload.id === bug.id)
+        bugs[index].resolved = true
     }
-}
+})
+
+
+
+let lastId = 0
+
     
 
 
