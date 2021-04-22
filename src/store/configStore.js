@@ -7,6 +7,6 @@ import reducer from './bugs'
 
 export default function () {
     return configureStore({
-        reducer
+        reducer // it can be writen like (reducer: reducer), both are the same name, so we can just put reducer
     })
  }

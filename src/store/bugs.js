@@ -25,7 +25,10 @@ export default createReducer([], {
             })
     },
     [bugRemoved.type]: (bugs, action) => {
-         bugs.filter(bug => bug.id !== action.payload.id)
+        return bugs.filter(bug => bug.id !== action.payload.id) // filter method should be used with return
+        
+        // const index = bugs.findIndex(bug => action.payload.id === bug.id)
+        // delete bugs[index]
     },
     [bugResolved.type]: (bugs, action) => {
         // state.map(bug => bug.id == action.payload.id ? { ...bug, resolved: true } : bug)
