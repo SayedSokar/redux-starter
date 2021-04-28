@@ -1,59 +1,119 @@
+import { createSlice } from "@reduxjs/toolkit";
+import { createSelector } from "reselect";
+import axios from "axios";
+import { apiCallBegan } from "./api";
+import moment from "moment";
 
-import { createSelector, createSlice } from '@reduxjs/toolkit'
-
-// createSelector Mosh in the vedio mentioned that it need package reselector, but actualy I found the same function in redux-toolkit
-
-
-let lastId = 0
-
-//-- create Slice function is creating reducer and the action in the same function.
 const slice = createSlice({
-    name: 'bugs',
-    initialState: [],
-    reducers: {
-        bugAdded: (bugs, action) => {
-            bugs.push({
-                id: ++lastId,
-                description: action.payload.description,
-                resolved: false
-        })},
-        bugRemoved: (bugs, action) => {
-            return bugs.filter(bug => bug.id !== action.payload.id) // filter method should be used with return
-        },
-        bugResolved: (bugs, action) => {
-            const index = bugs.findIndex(bug => action.payload.id === bug.id)
-            bugs[index].resolved = true
-        },
+  name: "bugs",
+  initialState: {
+    list: [],
+    loading: false,
+    lastFetch: null
+  },
+  reducers: {
+    bugsRequested: (bugs, action) => {
+      bugs.loading = true;
+    },
+
+    bugsReceived: (bugs, action) => {
+      bugs.list = action.payload;
+      bugs.loading = false;
+      bugs.lastFetch = Date.now();
+    },
+
+    bugsRequestFailed: (bugs, action) => {
+      bugs.loading = false;
+    },
+
+    bugAssignedToUser: (bugs, action) => {
+      const { id: bugId, userId } = action.payload;
+      const index = bugs.list.findIndex(bug => bug.id === bugId);
+      bugs.list[index].userId = userId;
+    },
+
+    // command - event
+    // addBug - bugAdded
+    bugAdded: (bugs, action) => {
+      bugs.list.push(action.payload);
+    },
+
+    // resolveBug (command) - bugResolved (event)
+    bugResolved: (bugs, action) => {
+      const index = bugs.list.findIndex(bug => bug.id === action.payload.id);
+      bugs.list[index].resolved = true;
     }
+  }
+});
 
-})
+export const {
+  bugAdded,
+  bugResolved,
+  bugAssignedToUser,
+  bugsReceived,
+  bugsRequested,
+  bugsRequestFailed
+} = slice.actions;
+export default slice.reducer;
 
-//exporting the reducer and actions 
+// Action Creators
+const url = "/bugs";
 
-export default slice.reducer
-export const { bugAdded, bugRemoved, bugResolved} = slice.actions
+export const loadBugs = () => (dispatch, getState) => {
+  const { lastFetch } = getState().entities.bugs;
 
+  const diffInMinutes = moment().diff(moment(lastFetch), "minutes");
+  if (diffInMinutes < 10) return;
 
-// --------------------------Selector  functions --------------//
+  return dispatch(
+    apiCallBegan({
+      url,
+      onStart: bugsRequested.type,
+      onSuccess: bugsReceived.type,
+      onError: bugsRequestFailed.type
+    })
+  );
+};
 
-export const getUnresolvedBugs = state =>
-    state.entities.bugs.filter(bug => !bug.resolved)
+export const addBug = bug =>
+  apiCallBegan({
+    url,
+    method: "post",
+    data: bug,
+    onSuccess: bugAdded.type
+  });
 
+export const resolveBug = id =>
+  apiCallBegan({
+    // /bugs
+    // PATCH /bugs/1
+    url: url + "/" + id,
+    method: "patch",
+    data: { resolved: true },
+    onSuccess: bugResolved.type
+  });
 
-// ---------------------------------------reducer function --------------//
-//------ note that the reducer should be the default export here in ths file---//
-//----- Note: createReducer function from redux-toolkit is using immer under the hood, so u can wirte imutated code as normal.
-//-- no need to the default state like below
+export const assignBugToUser = (bugId, userId) =>
+  apiCallBegan({
+    url: url + "/" + bugId,
+    method: "patch",
+    data: { userId },
+    onSuccess: bugAssignedToUser.type
+  });
 
-//----- selector functions by special package createSelector----
-export const getUnresolvedBugs_withReselector = createSelector(
+// Selector
+
+// Memoization
+// bugs => get unresolved bugs from the cache
+
+export const getBugsByUser = userId =>
+  createSelector(
     state => state.entities.bugs,
-    bugs => bugs.filter(bug => !bug.resolved)
-)
+    bugs => bugs.filter(bug => bug.userId === userId)
+  );
 
-
-
-
-    
-
-
+export const getUnresolvedBugs = createSelector(
+  state => state.entities.bugs,
+  state => state.entities.projects,
+  (bugs, projects) => bugs.list.filter(bug => !bug.resolved)
+);
